@@ -10,79 +10,41 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #e5ddd5;
-            height: 100vh;
-            overflow: hidden;
-        }
-        header {
-            background: #128C7E;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-size: 20px;
-        }
-        #auth {
-            text-align: center;
-            padding: 50px;
-        }
-        #app {
-            display: none;
-            height: calc(100vh - 60px);
-            display: flex;
-        }
-        #sidebar {
-            width: 300px;
-            background: white;
-            border-right: 1px solid #ccc;
-            overflow-y: auto;
-        }
-        #chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        #messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background: #f0f0f0;
-        }
+        body { margin:0; font-family:Arial; background:#e5ddd5; height:100vh; overflow:hidden; }
+        header { background:#128C7E; color:white; padding:15px; text-align:center; font-size:22px; }
+        
+        #app { display:flex; height:calc(100vh - 60px); }
+        #sidebar { width:320px; background:white; border-right:1px solid #ccc; overflow-y:auto; }
+        #chat-area { flex:1; display:flex; flex-direction:column; }
+
+        #messages { flex:1; padding:20px; overflow-y:auto; background:#f0f0f0; }
         .msg {
-            margin: 10px 0;
-            padding: 12px 16px;
-            border-radius: 12px;
-            max-width: 70%;
+            margin:10px 0;
+            padding:12px 16px;
+            border-radius:12px;
+            max-width:70%;
         }
-        .me {
-            background: #dcf8c6;
-            align-self: flex-end;
-            margin-left: auto;
-        }
-        .other {
-            background: white;
-            align-self: flex-start;
-        }
+        .me { background:#dcf8c6; margin-left:auto; }
+        .other { background:white; }
+
         #input-area {
-            padding: 15px;
-            background: #f0f0f0;
-            display: flex;
+            padding:15px;
+            background:#f0f0f0;
+            display:flex;
         }
         #message-input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 20px;
+            flex:1;
+            padding:12px;
+            border-radius:20px;
+            border:1px solid #ccc;
         }
         button {
-            margin-left: 10px;
-            padding: 12px 20px;
-            background: #128C7E;
-            color: white;
-            border: none;
-            border-radius: 20px;
+            margin-left:10px;
+            padding:12px 25px;
+            background:#128C7E;
+            color:white;
+            border:none;
+            border-radius:20px;
         }
     </style>
 </head>
@@ -90,21 +52,16 @@
 
 <header>💬 Simple Chat</header>
 
-<div id="auth">
-    <h2>Login to Chat</h2>
-    <div id="firebaseui-auth-container"></div>
-</div>
-
 <div id="app">
     <!-- Sidebar -->
     <div id="sidebar">
-        <h3 style="padding:15px;">Users</h3>
+        <h3 style="padding:15px; background:#f0f0f0;">Users</h3>
         <div id="users-list"></div>
     </div>
 
     <!-- Chat Area -->
     <div id="chat-area">
-        <div style="background:#128C7E;color:white;padding:15px;" id="chat-header">
+        <div id="chat-header" style="background:#128C7E; color:white; padding:15px;">
             Select a user to start chatting
         </div>
         <div id="messages"></div>
@@ -116,7 +73,7 @@
 </div>
 
 <script>
-// ================== YOUR FIREBASE CONFIG ==================
+// ================== FIREBASE CONFIG ==================
 const firebaseConfig = {
     apiKey: "AIzaSyBOvdxASX7bMj_opJIrrTLtVHtP9Q9vhaQ",
     authDomain: "chatting-site-e4a95.firebaseapp.com",
@@ -138,8 +95,6 @@ let activeChatId = null;
 firebase.auth().onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
-        document.getElementById("auth").style.display = "none";
-        document.getElementById("app").style.display = "flex";
         initUser();
     }
 });
@@ -150,22 +105,22 @@ function initUser() {
             currentUsername = snap.val().username;
             loadUsers();
         } else {
-            let username = prompt("Choose a username:");
-            if (username) registerUsername(username);
+            let name = prompt("Choose your username:");
+            if (name) registerUsername(name);
         }
     });
 }
 
-function registerUsername(username) {
-    db.ref("usernames/" + username).once("value", snap => {
+function registerUsername(name) {
+    db.ref("usernames/" + name).once("value", snap => {
         if (snap.exists()) {
             alert("Username taken! Try another.");
-            let newName = prompt("Choose username:");
+            let newName = prompt("New username:");
             if (newName) registerUsername(newName);
         } else {
-            db.ref("usernames/" + username).set(currentUser.uid);
-            db.ref("users/" + currentUser.uid).set({ username: username });
-            currentUsername = username;
+            db.ref("usernames/" + name).set(currentUser.uid);
+            db.ref("users/" + currentUser.uid).set({ username: name });
+            currentUsername = name;
             loadUsers();
         }
     });
@@ -205,7 +160,7 @@ function loadMessages() {
             const msg = m.val();
             const div = document.createElement("div");
             div.className = `msg ${msg.uid === currentUser.uid ? 'me' : 'other'}`;
-            div.innerHTML = `<strong>${msg.name}:</strong> ${msg.text}`;
+            div.innerHTML = `<strong>${msg.name}:</strong><br>${msg.text}`;
             messagesDiv.appendChild(div);
         });
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -215,7 +170,9 @@ function loadMessages() {
 function sendMessage() {
     const input = document.getElementById("message-input");
     const text = input.value.trim();
-    if (!text || !activeChatId) return;
+
+    if (!text) return alert("Type a message");
+    if (!activeChatId) return alert("Please select a user first");
 
     db.ref("chats/" + activeChatId).push({
         text: text,
@@ -225,10 +182,6 @@ function sendMessage() {
     });
 
     input.value = "";
-}
-
-function logout() {
-    firebase.auth().signOut();
 }
 
 // Enter key
