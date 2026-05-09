@@ -1,221 +1,241 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Chat Site</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat • Rex Awolo</title>
 
-  <!-- Firebase Core -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
-  <!-- Firebase Authentication -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-
-  <!-- Firebase UI -->
-  <script src="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.js"></script>
-
-  <!-- Firebase UI CSS -->
-  <link
-    rel="stylesheet"
-    href="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.css"
-  />
-
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f2f5;
-    }
-
-    header {
-      background: #1877f2;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    #loader {
-      text-align: center;
-      margin-top: 30px;
-      font-size: 18px;
-    }
-
-    #firebaseui-auth-container {
-      margin-top: 40px;
-    }
-
-    #user-info {
-      display: none;
-      text-align: center;
-      margin-top: 40px;
-    }
-
-    #user-name {
-      margin: 15px 0;
-      font-size: 20px;
-      color: #333;
-    }
-
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      background: red;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: darkred;
-    }
-
-    .chat-box {
-      width: 90%;
-      max-width: 600px;
-      margin: 30px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-    }
-
-    .message {
-      background: #e4e6eb;
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 10px;
-      text-align: left;
-    }
-  </style>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #e5ddd5;
+            height: 100vh;
+            overflow: hidden;
+        }
+        header {
+            background: #128C7E;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+        }
+        #auth {
+            text-align: center;
+            padding: 50px;
+        }
+        #app {
+            display: none;
+            height: calc(100vh - 60px);
+            display: flex;
+        }
+        #sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #ccc;
+            overflow-y: auto;
+        }
+        #chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f0f0f0;
+        }
+        .msg {
+            margin: 10px 0;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 70%;
+        }
+        .me {
+            background: #dcf8c6;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .other {
+            background: white;
+            align-self: flex-start;
+        }
+        #input-area {
+            padding: 15px;
+            background: #f0f0f0;
+            display: flex;
+        }
+        #message-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+        }
+        button {
+            margin-left: 10px;
+            padding: 12px 20px;
+            background: #128C7E;
+            color: white;
+            border: none;
+            border-radius: 20px;
+        }
+    </style>
 </head>
-
 <body>
 
-  <header>My Chatting Site</header>
+<header>💬 Simple Chat</header>
 
-  <!-- Loading -->
-  <div id="loader">Loading...</div>
+<div id="auth">
+    <h2>Login to Chat</h2>
+    <div id="firebaseui-auth-container"></div>
+</div>
 
-  <!-- Firebase Login -->
-  <div id="firebaseui-auth-container"></div>
-
-  <!-- User Section -->
-  <div id="user-info">
-
-    <h2>Welcome</h2>
-
-    <p id="user-name"></p>
-
-    <button onclick="logout()">Logout</button>
-
-    <!-- Fake Chat Area -->
-    <div class="chat-box">
-
-      <h3>Chat Room</h3>
-
-      <div class="message">
-        Welcome to your new chat app 🎉
-      </div>
-
-      <div class="message">
-        Firebase Authentication is working ✅
-      </div>
-
+<div id="app">
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <h3 style="padding:15px;">Users</h3>
+        <div id="users-list"></div>
     </div>
 
-  </div>
+    <!-- Chat Area -->
+    <div id="chat-area">
+        <div style="background:#128C7E;color:white;padding:15px;" id="chat-header">
+            Select a user to start chatting
+        </div>
+        <div id="messages"></div>
+        <div id="input-area">
+            <input type="text" id="message-input" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</div>
 
-  <script>
+<script>
+// ================== YOUR FIREBASE CONFIG ==================
+const firebaseConfig = {
+    apiKey: "AIzaSyBOvdxASX7bMj_opJIrrTLtVHtP9Q9vhaQ",
+    authDomain: "chatting-site-e4a95.firebaseapp.com",
+    databaseURL: "https://chatting-site-e4a95-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "chatting-site-e4a95",
+    storageBucket: "chatting-site-e4a95.firebasestorage.app",
+    messagingSenderId: "310064217346",
+    appId: "1:310064217346:web:5c1c1f29d486a3a120d61b"
+};
 
-    // Firebase Configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyBOvdxASX7bMj_opJIrrTLtVHtP9Q9vhaQ",
-      authDomain: "chatting-site-e4a95.firebaseapp.com",
-      projectId: "chatting-site-e4a95",
-      storageBucket: "chatting-site-e4a95.firebasestorage.app",
-      messagingSenderId: "310064217346",
-      appId: "1:310064217346:web:5c1c1f29d486a3a120d61b"
-    };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
+let currentUser = null;
+let currentUsername = "";
+let activeChatId = null;
 
-    // Firebase UI
-    const ui = new firebaseui.auth.AuthUI(firebase.auth());
+// Auth
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        currentUser = user;
+        document.getElementById("auth").style.display = "none";
+        document.getElementById("app").style.display = "flex";
+        initUser();
+    }
+});
 
-    // Firebase UI Config
-    const uiConfig = {
-
-      signInSuccessUrl: "./",
-
-      signInOptions: [
-
-        // Google Login
-        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-
-        // Email Login
-        firebase.auth.EmailAuthProvider.PROVIDER_ID
-
-      ],
-
-      callbacks: {
-
-        signInSuccessWithAuthResult: function(authResult, redirectUrl) {
-          return false;
-        },
-
-        uiShown: function() {
-          document.getElementById("loader").style.display = "none";
+function initUser() {
+    db.ref("users/" + currentUser.uid).once("value", snap => {
+        if (snap.exists()) {
+            currentUsername = snap.val().username;
+            loadUsers();
+        } else {
+            let username = prompt("Choose a username:");
+            if (username) registerUsername(username);
         }
+    });
+}
 
-      }
+function registerUsername(username) {
+    db.ref("usernames/" + username).once("value", snap => {
+        if (snap.exists()) {
+            alert("Username taken! Try another.");
+            let newName = prompt("Choose username:");
+            if (newName) registerUsername(newName);
+        } else {
+            db.ref("usernames/" + username).set(currentUser.uid);
+            db.ref("users/" + currentUser.uid).set({ username: username });
+            currentUsername = username;
+            loadUsers();
+        }
+    });
+}
 
-    };
+function loadUsers() {
+    const list = document.getElementById("users-list");
+    db.ref("users").on("value", snap => {
+        list.innerHTML = "";
+        snap.forEach(child => {
+            if (child.key === currentUser.uid) return;
+            const user = child.val();
+            const div = document.createElement("div");
+            div.style.padding = "15px";
+            div.style.borderBottom = "1px solid #eee";
+            div.style.cursor = "pointer";
+            div.innerHTML = `<strong>${user.username}</strong>`;
+            div.onclick = () => openChat(child.key, user.username);
+            list.appendChild(div);
+        });
+    });
+}
 
-    // Start Firebase UI
-    ui.start("#firebaseui-auth-container", uiConfig);
+function openChat(otherUid, otherName) {
+    activeChatId = [currentUser.uid, otherUid].sort().join("_");
+    document.getElementById("chat-header").innerHTML = `Chatting with <strong>${otherName}</strong>`;
+    loadMessages();
+}
 
-    // Check Login State
-    firebase.auth().onAuthStateChanged(function(user) {
+function loadMessages() {
+    if (!activeChatId) return;
+    const messagesDiv = document.getElementById("messages");
 
-      if (user) {
+    db.ref("chats/" + activeChatId).on("value", snap => {
+        messagesDiv.innerHTML = "";
+        snap.forEach(m => {
+            const msg = m.val();
+            const div = document.createElement("div");
+            div.className = `msg ${msg.uid === currentUser.uid ? 'me' : 'other'}`;
+            div.innerHTML = `<strong>${msg.name}:</strong> ${msg.text}`;
+            messagesDiv.appendChild(div);
+        });
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+}
 
-        // Show user section
-        document.getElementById("user-info").style.display = "block";
+function sendMessage() {
+    const input = document.getElementById("message-input");
+    const text = input.value.trim();
+    if (!text || !activeChatId) return;
 
-        // Hide login section
-        document.getElementById("firebaseui-auth-container").style.display = "none";
-
-        // Show username
-        document.getElementById("user-name").innerHTML =
-          "Logged in as: " + user.displayName;
-
-      } else {
-
-        // Hide user section
-        document.getElementById("user-info").style.display = "none";
-
-        // Show login section
-        document.getElementById("firebaseui-auth-container").style.display = "block";
-
-      }
-
+    db.ref("chats/" + activeChatId).push({
+        text: text,
+        uid: currentUser.uid,
+        name: currentUsername,
+        time: Date.now()
     });
 
-    // Logout Function
-    function logout() {
-      firebase.auth().signOut();
-    }
+    input.value = "";
+}
 
-  </script>
+function logout() {
+    firebase.auth().signOut();
+}
+
+// Enter key
+document.getElementById("message-input").addEventListener("keypress", e => {
+    if (e.key === "Enter") sendMessage();
+});
+</script>
 
 </body>
 </html>
